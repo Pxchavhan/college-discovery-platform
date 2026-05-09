@@ -7,9 +7,9 @@ export const saveCollege = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const { collegeId } = req.body;
-    
+
     if (!collegeId) return res.status(400).json({ error: 'collegeId is required' });
-    
+
     const saved = await userService.saveCollege(userId, Number(collegeId));
     res.status(201).json(saved);
   } catch (error) {
@@ -22,7 +22,7 @@ export const unsaveCollege = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const { collegeId } = req.params;
-    
+
     await userService.unsaveCollege(userId, Number(collegeId));
     res.json({ message: 'Removed from saved' });
   } catch (error) {
@@ -35,12 +35,12 @@ export const getSavedColleges = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const savedRecords = await userService.getSavedColleges(userId);
-    
-    const collegeIds = savedRecords.map(sc => sc.collegeId);
+
+    const collegeIds = savedRecords.map((sc: any) => sc.collegeId);
     if (collegeIds.length === 0) {
       return res.json([]);
     }
-    
+
     const colleges = await collegeService.getCollegesByIds(collegeIds);
     res.json(colleges);
   } catch (error) {
