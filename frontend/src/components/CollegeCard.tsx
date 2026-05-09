@@ -1,3 +1,4 @@
+// CollegeCard.tsx - Safe version
 import { MapPin, BookOpen, Check, Bookmark, Star, IndianRupee } from "lucide-react";
 import Link from "next/link";
 
@@ -6,10 +7,10 @@ type College = {
   name: string;
   location: string;
   description?: string;
-  established?: number;
-  fees?: number;
-  rating?: number;
-  placementPct?: number;
+  established?: number | null;
+  fees?: number | null;
+  rating?: number | null;
+  placementPct?: number | null;
 };
 
 export default function CollegeCard({
@@ -43,10 +44,10 @@ export default function CollegeCard({
               <BookOpen className="text-white w-5 h-5" />
             </div>
 
-            {college.rating !== undefined && college.rating !== null && (
+            {college.rating != null && (
               <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full px-2.5 py-1 text-yellow-300 text-xs font-semibold">
                 <Star className="w-3 h-3 fill-current" />
-                {college.rating.toFixed(1)}
+                {Number(college.rating).toFixed(1)}
               </div>
             )}
           </div>
@@ -68,17 +69,17 @@ export default function CollegeCard({
               <span className="truncate max-w-[110px]">{college.location}</span>
             </div>
 
-            {college.fees !== undefined && college.fees !== null && (
+            {college.fees != null && (
               <div className="flex items-center gap-1 bg-slate-800/60 rounded-full px-3 py-1.5 border border-slate-700/50">
                 <IndianRupee className="w-3 h-3 text-emerald-400" />
-                <span>{(college.fees / 100000).toFixed(1)}L/yr</span>
+                <span>{(Number(college.fees) / 100000).toFixed(1)}L/yr</span>
               </div>
             )}
 
-            {college.placementPct !== undefined && college.placementPct !== null && (
+            {college.placementPct != null && (
               <div className="flex items-center gap-1 bg-slate-800/60 rounded-full px-3 py-1.5 border border-slate-700/50">
                 <span className="text-blue-300">↑</span>
-                <span>{college.placementPct}% placed</span>
+                <span>{Number(college.placementPct)}% placed</span>
               </div>
             )}
           </div>
@@ -103,20 +104,22 @@ export default function CollegeCard({
       )}
 
       {/* Save button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (onSaveToggle) onSaveToggle(college.id);
-        }}
-        className={`absolute ${onToggleCompare ? "top-14" : "top-5"
-          } right-5 z-20 w-7 h-7 rounded-full border flex items-center justify-center transition-all cursor-pointer ${isSaved
-            ? "bg-emerald-500 border-emerald-500 text-white"
-            : "bg-slate-900/80 border-slate-600 text-slate-400 opacity-0 group-hover:opacity-100"
-          }`}
-      >
-        <Bookmark className="w-3.5 h-3.5" />
-      </button>
+      {onSaveToggle && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSaveToggle(college.id);
+          }}
+          className={`absolute ${onToggleCompare ? "top-14" : "top-5"
+            } right-5 z-20 w-7 h-7 rounded-full border flex items-center justify-center transition-all cursor-pointer ${isSaved
+              ? "bg-emerald-500 border-emerald-500 text-white"
+              : "bg-slate-900/80 border-slate-600 text-slate-400 opacity-0 group-hover:opacity-100"
+            }`}
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 }
