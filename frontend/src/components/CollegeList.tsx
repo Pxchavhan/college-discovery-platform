@@ -7,15 +7,16 @@ import { useRouter } from "next/navigation";
 import CollegeCard from "./CollegeCard";
 import { useAuth } from "../context/AuthContext";
 
+// FIX: Change null to undefined to match CollegeCard
 interface College {
   id: number;
   name: string;
   location: string;
   description: string;
-  established: number | null;
-  fees: number | null;
-  rating: number | null;
-  placementPct: number | null;
+  established?: number;  // Changed from 'number | null'
+  fees?: number;         // Changed from 'number | null'
+  rating?: number;       // Changed from 'number | null'
+  placementPct?: number; // Changed from 'number | null'
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -24,12 +25,12 @@ export default function CollegeList() {
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const { user, token } = useAuth();
   const router = useRouter();
 
@@ -43,13 +44,13 @@ export default function CollegeList() {
       fetch(`${API_URL}/api/user/saved`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSavedIds(data.map((c: any) => c.id));
-        }
-      })
-      .catch(console.error);
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setSavedIds(data.map((c: any) => c.id));
+          }
+        })
+        .catch(console.error);
     } else {
       setSavedIds([]);
     }
@@ -67,22 +68,31 @@ export default function CollegeList() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const queryParams = new URLSearchParams({
         page: pageNum.toString(),
         limit: "6",
       });
-      
+
       if (search) queryParams.append("search", search);
       if (location) queryParams.append("location", location);
 
       const res = await fetch(`${API_URL}/api/colleges?${queryParams.toString()}`);
-      
+
       if (!res.ok) throw new Error("Failed to fetch colleges");
-      
+
       const data = await res.json();
-      
-      setColleges(prev => reset ? data.data : [...prev, ...data.data]);
+
+      // FIX: Transform the data to convert null to undefined
+      const transformedData = data.data.map((college: any) => ({
+        ...college,
+        established: college.established ?? undefined,
+        fees: college.fees ?? undefined,
+        rating: college.rating ?? undefined,
+        placementPct: college.placementPct ?? undefined,
+      }));
+
+      setColleges(prev => reset ? transformedData : [...prev, ...transformedData]);
       setHasMore(data.page < data.totalPages);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
@@ -125,9 +135,9 @@ export default function CollegeList() {
       } else {
         await fetch(`${API_URL}/api/user/saved`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}` 
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({ collegeId: id })
         });
@@ -160,7 +170,7 @@ export default function CollegeList() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        
+
         <div className="relative sm:max-w-xs w-full">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <MapPin className="h-5 w-5 text-slate-400" />
@@ -186,16 +196,16 @@ export default function CollegeList() {
       {/* College Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {colleges.map((college) => (
-          <CollegeCard 
-            key={college.id} 
-            college={college} 
+          <CollegeCard
+            key={college.id}
+            college={college}
             isSelected={compareIds.includes(college.id)}
             onToggleCompare={toggleCompare}
             isSaved={savedIds.includes(college.id)}
             onSaveToggle={handleSaveToggle}
           />
         ))}
-        
+
         {/* Loading Skeletons */}
         {loading && (
           <>
@@ -226,7 +236,7 @@ export default function CollegeList() {
             We couldn't find any colleges matching your search criteria. Try adjusting your filters or search term.
           </p>
           {(search || location) && (
-            <button 
+            <button
               onClick={() => { setSearch(''); setLocation(''); }}
               className="mt-6 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors font-medium border border-slate-600"
             >
@@ -267,14 +277,14 @@ export default function CollegeList() {
               <span className="text-slate-200 font-medium hidden sm:inline">Colleges selected to compare</span>
             </div>
             <div className="flex gap-3">
-              <button 
-                onClick={() => setCompareIds([])} 
+              <button
+                onClick={() => setCompareIds([])}
                 className="px-4 py-2 text-slate-400 hover:text-slate-200 transition-colors font-medium"
               >
                 Clear
               </button>
-              <Link 
-                href={`/compare?ids=${compareIds.join(',')}`} 
+              <Link
+                href={`/compare?ids=${compareIds.join(',')}`}
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-600/20"
               >
                 Compare Now
